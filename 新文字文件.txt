@@ -1,8 +1,0 @@
-define IFace class
-Ftree -> IFtree
-Mtree -> MStree
-KineticsModelM: IFMerge
-KineticsModelWzoom: MSWeight, camera zoom version
-KineticsMode: MSWeight, true scale version
-
-2017/10/15: 5800 lines(Model:3708/tree:2092)
