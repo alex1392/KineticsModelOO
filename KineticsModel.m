@@ -54,10 +54,10 @@ elseif CN > 1
   VarStr = [ num2str(CN),'SC' ];
 end
 fName = [VarStr,'_',num2str(sigma(DirecE)),'MPa'];
-if ~contains(pwd,fName)
+if isempty(strfind(pwd,fName))
   mkdir(fName); cd(fName)
 end
-if contains( opt, 'xls' )
+if strfind( opt, 'xls' )
   fid = fopen([ fName, '.xls' ], 'wt' );
   fprintf( fid, 'KineticsModel\n' );
   
@@ -136,20 +136,20 @@ while t < tf
     continue
   end
   if ~isempty(opt)
-    if contains( opt, 'xls' ) && t > 0.25
+    if strfind( opt, 'xls' ) && t > 0.25
       VarVol = arrayfun(@(x) {x}, MST.VarVol);
       fprintf( fid, '%f\t%f\t%f\t%f\t%f\t%f\t%f\t%f\t%f\t%f\n',t ,...
         EF(DirecE)/LoadDeg*10,MST.EffProp.PR(DirecE) ,MST.EffProp.epsR(DirecE)*100,VarVol{:});
     end
-    if contains(opt, 'fig')
+    if strfind(opt, 'fig')
       saveas([fSC, fIF, fcharts], [fName, '-', num2str(picN), '.fig']);
     end
-    if contains(opt, 'jpg')
+    if strfind(opt, 'jpg')
       saveas(fIF, [fName, '-IF', num2str(picN), '.jpg']);
       saveas(fSC, [fName, '-SC', num2str(picN), '.jpg']);
       saveas(fcharts, [fName, '-charts', num2str(picN), '.jpg']);
     end
-    if contains(opt, 'mat') && ~mod(picN,10)
+    if strfind(opt, 'mat') && ~mod(picN,10)
       save([fName,'_',num2str(picN),'.mat'])
     end
   end
@@ -157,7 +157,7 @@ while t < tf
   picN = picN + 1;
   t = t + dt;
 end
-if contains( opt, 'xls' )
+if strfind( opt, 'xls' )
   fclose(fid);
 end
 %% KineticsModelOO Inner Functions

@@ -50,7 +50,7 @@ classdef MStruct < Part
       assert(Badness < MS.Tol, 'This MS is not compatible.');
       switch MS.CutType
         case 'COA'
-          MST = MakeEmptyTree(MS.Rank, MStree(MS), 1);
+          MST = MakeTree(MS.Rank, MStree(MS), 1);
           IFT = IFtree(MST, []);
           PFIdx = 2;
           COACut(MS,Stree);
@@ -62,7 +62,7 @@ classdef MStruct < Part
       IFT = IFT.subIFtree(MST);
       
       % getTree Inner Functions
-      function MST = MakeEmptyTree(Rank,MST,Idx)
+      function MST = MakeTree(Rank,MST,Idx)
         if ~Rank
           return
         end
@@ -81,10 +81,18 @@ classdef MStruct < Part
           [MST,x(i)] = MST.addnode(Idx,[]);
         end
         for i = 1:n
-          MST = MakeEmptyTree(Rank-1,MST,x(i));
+          MST = MakeTree(Rank-1,MST,x(i));
         end
       end
-            
+      
+      function [LST,RST] = SetTree(part,Stree)
+        RST = [];  LST = [];
+        for r = 1:part.Rank
+          RST = [RST,Stree(2^r : 2^(r+1) - 2^(r-1) - 1)];
+          LST = [LST,Stree(2^(r+1) - 2^(r-1) : 2^(r+1) - 1)];
+        end
+      end
+      
       function COACut(MS,Stree)
         if MS.Rank
           [LST,RST] = SetTree(MS,Stree);
@@ -96,14 +104,6 @@ classdef MStruct < Part
               COACut(CpartR(CID),RST);
             end
           end
-        end
-      end
-      
-      function [LST,RST] = SetTree(part,Stree)
-        RST = [];  LST = [];
-        for r = 1:part.Rank
-          RST = [RST,Stree(2^r : 2^(r+1) - 2^(r-1) - 1)];
-          LST = [LST,Stree(2^(r+1) - 2^(r-1) : 2^(r+1) - 1)];
         end
       end
       
@@ -142,7 +142,7 @@ fine = (numel(MST.getchildren(MST.Parent(PFIdx)))-1)/2;
         Cobj = parent;
         for i = 1: length(Dp)
           cfEqu = [IFN', Dp(i)];
-          [Robj,Lobj,CIF] = PreSet(parent,i);
+          [Robj,Lobj,CIF] = Preset(parent,i);
           [Robj,Lobj,CIF] = Cobj.Cut(cfEqu,Robj,Lobj,CIF);
           CpartR = [CpartR,Lobj];
           MST = MST.set(PFIdx,Lobj); %Lobj.draw
@@ -155,7 +155,7 @@ fine = (numel(MST.getchildren(MST.Parent(PFIdx)))-1)/2;
         PFIdx = PFIdx + 1;
       end
       
-      function [Robj,Lobj,CIF] = PreSet(parent,cutID)
+      function [Robj,Lobj,CIF] = Preset(parent,cutID)
         Robj = parent;
         Lobj = Robj;
         Robj.DOF = parent.DOF(1:end-1);
