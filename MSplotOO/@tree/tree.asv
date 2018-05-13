@@ -90,7 +90,7 @@ classdef tree
         function T = insertchild(T, parent, data, n)
           % n: insert the child as the n-th child
           childrenID = T.getchildren(parent);
-          assert(n > 0 && n <= numel(childrenID) + 1,'Cannot insert n-th child for parentID = %d', parent);
+          assert(n > 0 && n <= numel(childrenID),'Cannot insert n-th child for parentID = %d', parent);
           T = T.addnode(parent, data);
           
           childrenID = T.getchildren(parent);
@@ -98,8 +98,8 @@ classdef tree
           Nodes = insert(Nodes(1:end-1), n, Nodes(end));
           T.Node(childrenID) = Nodes;
           
-          for i = numel(childrenID) - 1:-1:n
-            T.Parent(T.Parent == childrenID(i)) = childrenID(i+1);
+          for i = 1:numel(childrenID)
+            T.Parent(T.Parent == childrenID(i))
           end
         end
         
