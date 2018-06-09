@@ -2,11 +2,11 @@ classdef Part
   %% Part  A class represent any region with boundary points and faces.
   
   properties (Hidden,Constant)
-    Tol = Const.Tol;
-    MTol = Const.MTol;
-    vn = Const.vn;
-    PlotL = Const.PlotL;
-    deffine = Const.deffine;
+    Tol = Const.FerroConst.Tol;
+    MTol = Const.FerroConst.MTol;
+    vn = Const.FerroConst.vn;
+    PlotL = Const.FerroConst.PlotL;
+    deffine = Const.FerroConst.deffine;
   end
   
   properties

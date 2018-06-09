@@ -55,6 +55,8 @@ classdef MStruct < Part
           PFIdx = 2;
           COACut(MS,Stree);
         case 'EC'
+          MST = MStree(MS);
+          IFT = IFtree();
           
         case '' %Define your cut type here
           
@@ -62,6 +64,21 @@ classdef MStruct < Part
       IFT = IFT.subIFtree(MST);
       
       % getTree Inner Functions
+      function ECCut(MST,Stree,Rank)
+        if ~Rank
+          return
+        end
+        StartP = mean(MS.p);
+        for Node = MST.Node
+          if Node.Rank == Rank && Node.isin(StartP)
+            break;
+          end
+        end
+        
+        
+        
+      end
+      
       function MST = MakeEmptyTree(Rank,MST,Idx)
         if ~Rank
           return
@@ -86,15 +103,16 @@ classdef MStruct < Part
       end
             
       function COACut(MS,Stree)
-        if MS.Rank
-          [LST,RST] = SetTree(MS,Stree);
-          CpartR = CutRankCOA(MS,Stree);
-          for CID = 1:length(CpartR)
-            if mod(CID,2) %odd
-              COACut(CpartR(CID),LST);
-            else %even
-              COACut(CpartR(CID),RST);
-            end
+        if ~MS.Rank
+          return
+        end
+        [LST,RST] = SetTree(MS,Stree);
+        CpartR = CutRankCOA(MS,Stree);
+        for CID = 1:length(CpartR)
+          if mod(CID,2) %odd
+            COACut(CpartR(CID),LST);
+          else %even
+            COACut(CpartR(CID),RST);
           end
         end
       end
@@ -188,7 +206,7 @@ fine = (numel(MST.getchildren(MST.Parent(PFIdx)))-1)/2;
       if MS.Rank
         fc = 'w';
       else
-        fc = Const.varcolor(MS.Var,:);
+        fc = Const.FerroConst.varcolor(MS.Var,:);
       end
     end
     

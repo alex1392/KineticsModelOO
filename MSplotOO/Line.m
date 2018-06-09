@@ -1,7 +1,7 @@
 classdef Line 
     
     properties (Hidden, Constant)
-        Tol = Const.Tol;
+        Tol = Const.FerroConst.Tol;
     end
     
     properties %main

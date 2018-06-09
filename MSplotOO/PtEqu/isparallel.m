@@ -1,6 +1,6 @@
 function chk = isparallel(vA,vB,tol)
 if nargin < 3
-    tol = Const.Tol;
+    tol = Const.FerroConst.Tol;
 end
 vA = vA/norm(vA);%unit vector
 vB = vB/norm(vB);

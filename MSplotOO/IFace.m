@@ -1,8 +1,8 @@
 classdef IFace < Face
   properties (Constant,Hidden)
-    i_ini = Const.i_ini;
-    i_ang = Const.i_ang;
-    A = Const.A;
+    i_ini = Const.FerroConst.i_ini;
+    i_ang = Const.FerroConst.i_ang;
+    A = Const.FerroConst.A;
   end
 
   properties
@@ -159,10 +159,10 @@ classdef IFace < Face
         return
       end
       if ~isempty(IF.LVar)
-        fc(1,:) = Const.varcolor(IF.LVar,:);
+        fc(1,:) = Const.FerroConst.varcolor(IF.LVar,:);
       end
       if ~isempty(IF.RVar)
-        fc(2,:) = Const.varcolor(IF.RVar,:);
+        fc(2,:) = Const.FerroConst.varcolor(IF.RVar,:);
       end
     end
     
@@ -207,7 +207,7 @@ function EN = getEN(IF)
 % matlab can't call get method recursively...
 EN = [];
 for i = 1:numel(IF)
-  deltaP = Const.MProp(IF(i).LVar).PR - Const.MProp(IF(i).RVar).PR;
+  deltaP = Const.FerroConst.MProp(IF(i).LVar).PR - Const.FerroConst.MProp(IF(i).RVar).PR;
   EN = [EN, norm(deltaP)^2*IF(i).A(IF(i).compatible+1)*IF(i).Area/2];
 end
 end
@@ -218,11 +218,11 @@ I = [];
 for i = 1:numel(IF)
   switch IF(i).type
     case '0'
-      I = [I, Const.i_ini*Const.i_ang(1)];
+      I = [I, Const.FerroConst.i_ini*Const.FerroConst.i_ang(1)];
     case '90'
-      I = [I, Const.i_ini*Const.i_ang(2)];
+      I = [I, Const.FerroConst.i_ini*Const.FerroConst.i_ang(2)];
     case '180'
-      I = [I, Const.i_ini*Const.i_ang(3)];
+      I = [I, Const.FerroConst.i_ini*Const.FerroConst.i_ang(3)];
   end
 end
 end

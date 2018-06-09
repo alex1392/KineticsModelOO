@@ -8,34 +8,26 @@ addpath(genpath(pwd))
 % dofR0 = []; dofR1 = [];
 % load('vardof')
 
-var = {[1 3 2 5]};
-dof = {[0.5 0.5]};
-% [var,dof] = randvar(25);
+% var = {[1 3 2 5]};
+% dof = {[0.5 0.5]};
+[var,dof] = randvar(16);
 type = repmat({'COA'},[1 length(var)]);
-EVec = [0;0;0];  % MV
-sigma = [0;0;0;0;0;0];  % MPa
-fine = 2;
+EVec = [0;0;1];  % MV
+sigma = [0;0;-1.07;0;0;0];  % MPa
+fine = 1;
 restart = 0;
-zoom = 1;
-IFMLim = 1;
+zoom = 2;
+IFMLim = 0.5;
 %% Options
 IFMethod = 'S'; % 'N', 'S'
 MSWeight = 1;
-opt = 'jpg/mat'; % xls/fig/jpg/mp4/gif/mat
+opt = 'jpg/mat'; % jpg/mp4/gif/mat
 IFtype = 'compat'; %'normal', 'compat'
 %% Parameters
-obj = Crystal(var,dof,type,'fine',fine);
-CN = numel(obj.Var);
 LoadDeg = 1e6; % Mega
-DirecE = find(EVec,1);
-if isempty(DirecE)
-  DirecE = 3;
-end
-dir = num2str(DirecE);
 sEF = 0.4e6;
 fps = 1; %frames per secend
-ScaleL=1e-2; %true scale (m)
-Lfrac = ScaleL / obj.PlotL;  %scale fraction
+ScaleL = 1e-2; %true scale (m)
 dt = 1e-3; % spacing time
 ti = 0; % starting time
 tf = 1.25; % ending time
@@ -47,7 +39,16 @@ hRT = [];
 fcharts = [];
 fSC = [];
 fIF = [];
-%% Data Output
+%% Dependent Parameters
+obj = Crystal(var,dof,type,'fine',fine);
+CN = numel(obj.Var);
+DirecE = find(EVec,1);
+if isempty(DirecE)
+  DirecE = 3;
+end
+dir = num2str(DirecE);
+Lfrac = ScaleL / obj.PlotL;  %scale fraction
+%% Folder
 if CN == 1
   VarStr = num2str( obj.Var{1} );
 elseif CN > 1
@@ -55,43 +56,20 @@ elseif CN > 1
 end
 fName = [VarStr,'_',num2str(sigma(DirecE)),'MPa'];
 if ~contains(pwd,fName)
-  mkdir(fName); cd(fName)
+  mkdir(fName);
+  cd(fName);
 end
-if contains( opt, 'xls' )
-  fid = fopen([ fName, '.xls' ], 'wt' );
-  fprintf( fid, 'KineticsModel\n' );
-  
-  fprintf( fid, '\n%%Initial State\n' );
-  fprintf( fid, 'Var:\t' );
-  for CNID = 1:CN
-    fprintf( fid, '%s\t', num2str( obj.Var{CNID} ) );
-  end
-  fprintf( fid, '\nDOF:\t' );
-  for CNID = 1:CN
-    fprintf( fid, '%s\t', num2str( obj.DOF{CNID} ) );
-  end
-  
-  fprintf( fid, '\n%%Load System\n' );
-  fprintf( fid, 'Load Degree:\t%d\n', LoadDeg );
-  fprintf( fid, 'Electric field:\t%s\n', num2str( EVec' ) );
-  fprintf( fid, 'Stress tensor:\t%s\n', num2str( sigma' ) );
-  
-  fprintf( fid, '\n%%Options\n' );
-  fprintf( fid, 'IFMethod:\t%s\n', IFMethod );
-  
-  fprintf( fid, '\n%%Parameters\n' );
-  fprintf( fid, 'dt:\t%d\n', dt );
-  fprintf( fid, 'Ps:\t%d\n', obj.EffProp.Ps );
-  fprintf( fid, 'epss:\t%d\n', obj.EffProp.epss );
-  fprintf( fid, 'fine:\t%d\n', obj.fine );
-  fprintf( fid, 'deffine:\t%s\n', num2str( obj.deffine ) );
-  fprintf( fid, 'inertia:\t%d\n', Face.i_ini );
-  fprintf( fid, 'i_ang:\t%s\n', num2str( Face.i_ang ) );
-  fprintf( fid, 'fps:\t%d\n', fps );
-  
-  fprintf( fid, '\n%%Simulation Datas\n' );
-  fprintf( fid, '\nt\tEF\tD\teps\tVar1\tVar2\tVar3\tVar4\tVar5\tVar6\t\n' );
-end
+mkdir('SC')
+mkdir('IF')
+mkdir('charts')
+mkdir('mat')
+outputFolder = pwd;
+SCFolder = [pwd,'\SC'];
+IFFolder = [pwd,'\IF'];
+chartsFolder = [pwd,'\charts'];
+matFolder = [pwd,'\mat'];
+cd(matFolder)
+save([fName,'_',0,'.mat']);
 %% Simulation Starts
 if ~restart
   if ~MSWeight
@@ -103,12 +81,11 @@ if ~restart
     min(obj.p(:,2)), max(obj.p(:,2)),...
     min(obj.p(:,3)), max(obj.p(:,3))];
   axLim = axLim*CN^(1/3) + [-1 1 -1 1 -1 1]*0.1;
+  picN = 1;
+  t = ti;
 else
   axLim = [];
-end
-picN = 1;
-t = ti;
-if restart
+  cd(matFolder)
   load([fName,'_',num2str(restart),'.mat'])
 end
 while t < tf
@@ -129,27 +106,26 @@ while t < tf
       warning('MST.Vol is not consistent');
       fprintf('deltaV = %f\n',MST.Vol - V)
     end
-    data = replot(data,MST,IFT,EF,stress);
-    
+    data = replot(data,MST,IFT,EF,stress); 
   else
     t = t + dt;
     continue
   end
   if ~isempty(opt)
-    if contains( opt, 'xls' ) && t > 0.25
-      VarVol = arrayfun(@(x) {x}, MST.VarVol);
-      fprintf( fid, '%f\t%f\t%f\t%f\t%f\t%f\t%f\t%f\t%f\t%f\n',t ,...
-        EF(DirecE)/LoadDeg*10,MST.EffProp.PR(DirecE) ,MST.EffProp.epsR(DirecE)*100,VarVol{:});
-    end
     if contains(opt, 'fig')
+      cd(outputFolder)
       saveas([fSC, fIF, fcharts], [fName, '-', num2str(picN), '.fig']);
     end
     if contains(opt, 'jpg')
+      cd(IFFolder)
       saveas(fIF, [fName, '-IF', num2str(picN), '.jpg']);
+      cd(SCFolder)
       saveas(fSC, [fName, '-SC', num2str(picN), '.jpg']);
+      cd(chartsFolder)
       saveas(fcharts, [fName, '-charts', num2str(picN), '.jpg']);
     end
     if contains(opt, 'mat') && ~mod(picN,10)
+      cd(matFolder)
       save([fName,'_',num2str(picN),'.mat'])
     end
   end
@@ -157,13 +133,10 @@ while t < tf
   picN = picN + 1;
   t = t + dt;
 end
-if contains( opt, 'xls' )
-  fclose(fid);
-end
 %% KineticsModelOO Inner Functions
   function IFM = judgeIF(MST,IFT,EF,stress)
     n = IFT.nnodes;
-    d = Const.MTol/2;
+    d = Const.FerroConst.MTol/2;
     IFM = zeros(1,n);
     if ~MSWeight
       switch IFMethod
@@ -267,10 +240,10 @@ end
   end
 
   function dW = judgeWeight(MST,IFT,EF,stress)
-    d = Const.MTol/10; %10/8
+    d = Const.FerroConst.MTol/10; %10/8
     cidx = MST.getchildren(1);
     Weight = [MST.get(cidx).Vol];
-    wallI = Const.i_ini*Const.i_ang(3); %10/8
+    wallI = Const.FerroConst.i_ini*Const.FerroConst.i_ang(3); %10/8
     VF = MST.VarVol;
     deltaV = zeros(CN);
     for i = 1:CN
@@ -308,8 +281,8 @@ end
         tmp = Weight(i) + sum(deltaV(i,:));
         if tmp < 0
           eater = find(deltaV(i,:) < 0);
-          deltaV(eater,i) = deltaV(eater,i) + (tmp-Const.Tol)/numel(eater); %Wi < 0
-          deltaV(i,eater) = deltaV(i,eater) - (tmp-Const.Tol)/numel(eater); %Wi < 0
+          deltaV(eater,i) = deltaV(eater,i) + (tmp-Const.FerroConst.Tol)/numel(eater); %Wi < 0
+          deltaV(i,eater) = deltaV(i,eater) - (tmp-Const.FerroConst.Tol)/numel(eater); %Wi < 0
         else
           out = out + 1;
         end
@@ -532,7 +505,7 @@ end
     IFEN = IFT.EN;
     set(data.P, 'xdata', [data.P.XData, E], 'ydata', [data.P.YData, P]);
     set(data.eps, 'xdata', [data.eps.XData, E], 'ydata', [data.eps.YData, eps]);
-    for i = 1:Const.vn
+    for i = 1:Const.FerroConst.vn
       set(data.V(i), 'xdata', [data.V(i).XData, t], 'ydata', [data.V(i).YData, VF(i)]);
     end
     set(data.G, 'xdata', [data.G.XData, t], 'ydata', [data.G.YData, G]);
@@ -557,7 +530,7 @@ end
   function data = setfig(MST, IFT, EF, stress)
     n = ceil(sqrt(CN));
     SSize = 10;
-    set(groot,'defaultAxesColorOrder',Const.varcolor);
+    set(groot,'defaultAxesColorOrder',Const.FerroConst.varcolor);
     %% fcharts
     fcharts = figure('name','charts','numbertitle','off');
     ax.EN = subplot(2,2,1, 'nextplot', 'add', 'parent', fcharts);

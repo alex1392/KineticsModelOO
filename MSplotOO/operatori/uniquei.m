@@ -9,7 +9,7 @@ if nargin < 2
   dim = 1;
 end
 if nargin < 3
-  Tol = Const.Tol;
+  Tol = Const.FerroConst.Tol;
 end
 if dim == 2
   obj = obj';

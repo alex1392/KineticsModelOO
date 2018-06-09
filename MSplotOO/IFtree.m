@@ -80,7 +80,7 @@ classdef IFtree < tree
     end
     
     function IFT = Lockchk(IFT)
-      mtol = Const.MTol;
+      mtol = Const.FerroConst.MTol;
       Odr = IFT.BFS;
       for i = 1:IFT.n-1
         IFA = IFT.get(Odr(i));

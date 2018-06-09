@@ -1,6 +1,6 @@
 function L = ExE(EquA, EquB, tol)
 if nargin < 3
-    tol = Const.Tol;
+    tol = Const.FerroConst.Tol;
 end
 A = [EquA(1:3); EquB(1:3)];
 if rank(A, tol) < 2

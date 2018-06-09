@@ -1,7 +1,7 @@
 classdef Face
   properties (Hidden, Constant)
-    Tol = Const.Tol;
-    MTol = Const.MTol;
+    Tol = Const.FerroConst.Tol;
+    MTol = Const.FerroConst.MTol;
   end
   
   properties 
@@ -204,7 +204,9 @@ classdef Face
     end
     
     function chk = ison(F,ipt)
-      chk = isonE(F.Equ,ipt);
+      for i = 1:numel(F)
+        chk = isonE(F(i).Equ,ipt);
+      end
     end
     %% set, get methods
     function obj = set.p(obj,p) %%SLOW!!!

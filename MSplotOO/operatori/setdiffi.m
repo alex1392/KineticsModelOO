@@ -4,7 +4,7 @@ function [A, ia] = setdiffi(A, B, dim, Tol)
         dim = 1;
     end
     if nargin < 4
-        Tol = Const.Tol;
+        Tol = Const.FerroConst.Tol;
     end
     [~, ia, ~] = intersecti(A, B, dim, Tol);
     A(ia,:) = [];
