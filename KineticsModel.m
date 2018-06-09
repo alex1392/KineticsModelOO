@@ -1,22 +1,25 @@
-function KineticsModel(sigma)
+function KineticsModel(sigma, immobility)
 %% KINETICSMODELOO  Simulate the hysteresis behavior of ferroelectric crystals, object-oriented version.
 %% Initialize Matlab Environment
 clear global; close all;
 addpath(genpath(pwd))
+%% Set Constant
+const = Const.FerroConst;
+const.i_ini = immobility;
 %% Input
-% varR0 = []; varR1 = [];
-% dofR0 = []; dofR1 = [];
-% load('vardof')
+varR0 = []; varR1 = [];
+dofR0 = []; dofR1 = [];
+load('vardof')
 
-% var = {[1 3 2 5]};
-% dof = {[0.5 0.5]};
-[var,dof] = randvar(16);
+var = varR0;
+dof = dofR0;
+% [var,dof] = randvar(16);
 type = repmat({'COA'},[1 length(var)]);
 EVec = [0;0;1];  % MV
-sigma = [0;0;-1.07;0;0;0];  % MPa
+%sigma = [0;0;-1.07;0;0;0];
 fine = 1;
 restart = 0;
-zoom = 2;
+zoom = 1;
 IFMLim = 0.5;
 %% Options
 IFMethod = 'S'; % 'N', 'S'
@@ -54,21 +57,11 @@ if CN == 1
 elseif CN > 1
   VarStr = [ num2str(CN),'SC' ];
 end
-fName = [VarStr,'_',num2str(sigma(DirecE)),'MPa'];
+fName = [VarStr,'_',num2str(sigma(DirecE)),'sigma_',num2str(immobility),'immobility'];
 if ~contains(pwd,fName)
   mkdir(fName);
   cd(fName);
 end
-mkdir('SC')
-mkdir('IF')
-mkdir('charts')
-mkdir('mat')
-outputFolder = pwd;
-SCFolder = [pwd,'\SC'];
-IFFolder = [pwd,'\IF'];
-chartsFolder = [pwd,'\charts'];
-matFolder = [pwd,'\mat'];
-cd(matFolder)
 save([fName,'_',0,'.mat']);
 %% Simulation Starts
 if ~restart
@@ -85,7 +78,6 @@ if ~restart
   t = ti;
 else
   axLim = [];
-  cd(matFolder)
   load([fName,'_',num2str(restart),'.mat'])
 end
 while t < tf
@@ -113,19 +105,14 @@ while t < tf
   end
   if ~isempty(opt)
     if contains(opt, 'fig')
-      cd(outputFolder)
       saveas([fSC, fIF, fcharts], [fName, '-', num2str(picN), '.fig']);
     end
     if contains(opt, 'jpg')
-      cd(IFFolder)
       saveas(fIF, [fName, '-IF', num2str(picN), '.jpg']);
-      cd(SCFolder)
       saveas(fSC, [fName, '-SC', num2str(picN), '.jpg']);
-      cd(chartsFolder)
       saveas(fcharts, [fName, '-charts', num2str(picN), '.jpg']);
     end
     if contains(opt, 'mat') && ~mod(picN,10)
-      cd(matFolder)
       save([fName,'_',num2str(picN),'.mat'])
     end
   end
@@ -248,10 +235,11 @@ end
     deltaV = zeros(CN);
     for i = 1:CN
       MSi = MST.subtree(cidx(i));
-      wallA = (MSi.Vol)^(2/3)*6; %10/8
-      dV = d*wallA;
-      for j = i+1:CN
+      for j = i+1:CN %2018/6/10
         MSj = MST.subtree(cidx(j));
+        
+        wallA = (MSi.Vol + MSj.Vol)^(2/3); %2018/6/10
+        dV = d*wallA;
         VFi = MSi.VarVol;
         VFj = MSj.VarVol;
         dVFi = dV*VFi/sum(VFi);
@@ -271,7 +259,7 @@ end
         g = (GR - GL)*MST.Vol*Lfrac^3 / (2*d);
         moved = -g/(wallI*wallA*Lfrac^2)*dt*Lfrac;
         deltaV(i,j) = moved*wallA;
-        deltaV(j,i) = -moved*wallA;
+        deltaV(j,i) = -moved*wallA;%2018/6/10
       end
     end
     out = 0;
