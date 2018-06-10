@@ -14,8 +14,8 @@ varR0 = []; varR1 = [];
 dofR0 = []; dofR1 = [];
 load('vardof')
 
-var = varR1;
-dof = dofR1;
+var = varR0;
+dof = dofR0;
 % [var,dof] = randvar(16);
 type = repmat({'COA'},[1 length(var)]);
 EVec = [0;0;1];  % MV
@@ -246,7 +246,8 @@ end
         MSj = MST.subtree(cidx(j));
         
         wallA = (MSi.Vol + MSj.Vol)^(2/3)*6; %2018/6/10
-        dV = d*wallA;
+        dV = d*10; %2018/6/11
+        
         VFi = MSi.VarVol;
         VFj = MSj.VarVol;
         dVFi = dV*VFi/sum(VFi);
@@ -265,6 +266,7 @@ end
         GL = getG(LVarVol,EF,stress) + LwallEN;
         g = (GR - GL)*MST.Vol*Lfrac^3 / (2*d);
         moved = -g/(wallI*wallA*Lfrac^2)*dt*Lfrac;
+        
         deltaV(i,j) = moved*wallA;
         deltaV(j,i) = -moved*wallA;%2018/6/10
       end
