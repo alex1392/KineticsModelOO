@@ -3,6 +3,7 @@ function data = KineticsModel(sigma,immobility,A)
 %% Initialize Matlab Environment
 clear global; close all;
 files = dir;
+assert(any(contains({files.name},'KineticsModel.m')), 'Execute this file in its folder!');
 addpath(genpath([pwd,'\MSplotOO']))
 %% Set Constant
 const = Const.FerroConst;
@@ -53,14 +54,14 @@ if isempty(DirecE)
   DirecE = 3;
 end
 DirStr = num2str(DirecE);
-Lfrac = ScaleL / Const.FerroConst.PlotL;  %scale fraction
+Lfrac = ScaleL / obj.PlotL;  %scale fraction
 %% Folder and Path
 if CN == 1
   VarStr = num2str( obj.Var{1} );
 elseif CN > 1
   VarStr = [ num2str(CN),'SC' ];
 end
-fName = [VarStr,'_',num2str(sigma(DirecE)),'sigma_',...
+fName = [VarStr,num2str(sigma(DirecE)),'sigma',...
         num2str(immobility),'immobility',...
         num2str(A(1)),'Anc',...
         num2str(A(2)),'Ac'];
@@ -364,8 +365,8 @@ end
     end
     [m,j] = min(abs(Dis));
     [M,k] = max(abs(Dis));
-    if M - m > 10*Const.FerroConst.MTol
-      delta =  Const.FerroConst.MTol*Rank; %delta = (M-m)*0.01;
+    if M - m > 10*cpart.MTol
+      delta =  cpart.MTol*Rank; %delta = (M-m)*0.01;
     else
       delta = (M-m)*0.5;
     end

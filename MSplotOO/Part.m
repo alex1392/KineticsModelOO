@@ -1,14 +1,6 @@
 classdef Part
   %% Part  A class represent any region with boundary points and faces.
   
-  properties (Hidden,Constant)
-    Tol = Const.FerroConst.Tol;
-    MTol = Const.FerroConst.MTol;
-    vn = Const.FerroConst.vn;
-    PlotL = Const.FerroConst.PlotL;
-    deffine = Const.FerroConst.deffine;
-  end
-  
   properties
     p
   end
@@ -174,9 +166,9 @@ classdef Part
       end
       i = 1;
       p = zeros(8,3);
-      for x = [ P.PlotL, -P.PlotL ]/2
-        for y = [ P.PlotL, -P.PlotL ]/2*n
-          for z = [ P.PlotL, -P.PlotL ]/2
+      for x = [ Const.FerroConst.PlotL, -Const.FerroConst.PlotL ]/2
+        for y = [ Const.FerroConst.PlotL, -Const.FerroConst.PlotL ]/2*n
+          for z = [ Const.FerroConst.PlotL, -Const.FerroConst.PlotL ]/2
             p(i,:) = [ x, y, z ];
             i = i + 1;
           end

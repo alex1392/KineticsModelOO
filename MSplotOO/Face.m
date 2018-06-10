@@ -1,9 +1,5 @@
 classdef Face
-  properties (Hidden, Constant)
-    Tol = Const.FerroConst.Tol;
-    MTol = Const.FerroConst.MTol;
-  end
-  
+ 
   properties 
     p
   end

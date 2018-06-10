@@ -1,7 +1,7 @@
 function [STree,Badness,numAnswer] =BuildTree(obj)
 Var = obj.Var;
 DOF = obj.DOF;
-Tol = obj.Tol;
+Tol = Const.FerroConst.Tol;
 if isempty(DOF)
   DOF = 1;
 end

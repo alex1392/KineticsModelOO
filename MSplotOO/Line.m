@@ -1,9 +1,5 @@
 classdef Line 
     
-    properties (Hidden, Constant)
-        Tol = Const.FerroConst.Tol;
-    end
-    
     properties %main
         p
         vec

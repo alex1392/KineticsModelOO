@@ -47,7 +47,7 @@ classdef MStruct < Part
       end
       assert(MS.Rank == length(MS.DOF), 'Input "Var" and "DOF" are mismatched');
       [Stree,Badness,~] = BuildTree(MS);
-      assert(Badness < MS.Tol, 'This MS is not compatible.');
+      assert(Badness < Const.FerroConst.Tol, 'This MS is not compatible.');
       switch MS.CutType
         case 'COA'
           MST = MakeEmptyTree(MS.Rank, MStree(MS), 1);

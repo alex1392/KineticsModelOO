@@ -2,10 +2,12 @@ function multirun
 % var = {[5 3 5 4],[5 3 6 1],[5 6 5 3],[5 6 6 5],[5 5 5 6],[5 3 4 6]};
 sigma = {[0;0;-1.78;0;0;0]};%,[0;0;-0.36;0;0;0],[0;0;-0.72;0;0;0],[0;0;-1.07;0;0;0],[0;0;0;0;0;0]};
 startpath = pwd;
-for i = 0.01:0.01:0.04
+immobility = 0.01;
+for i = 2:5
+  A = [1000,1]*i;
   cd(startpath)
   try
-    KineticsModel(sigma{1},i)
+    KineticsModel(sigma{1},immobility,A)
   catch
     continue
   end

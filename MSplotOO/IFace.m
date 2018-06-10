@@ -1,9 +1,4 @@
 classdef IFace < Face
-  properties (Constant,Hidden)
-    i_ini = Const.FerroConst.i_ini;
-    i_ang = Const.FerroConst.i_ang;
-    A = Const.FerroConst.A;
-  end
 
   properties
     LVar
@@ -208,7 +203,7 @@ function EN = getEN(IF)
 EN = [];
 for i = 1:numel(IF)
   deltaP = Const.FerroConst.MProp(IF(i).LVar).PR - Const.FerroConst.MProp(IF(i).RVar).PR;
-  EN = [EN, norm(deltaP)^2*IF(i).A(IF(i).compatible+1)*IF(i).Area/2];
+  EN = [EN, norm(deltaP)^2*Const.FerroConst.A(IF(i).compatible+1)*IF(i).Area/2];
 end
 end
 

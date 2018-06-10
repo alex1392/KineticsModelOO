@@ -1,8 +1,4 @@
-classdef SegL
-    properties (Hidden, Constant)
-        Tol = Const.FerroConst.Tol;
-    end
-    
+classdef SegL    
     properties
         %% main porperties
         p

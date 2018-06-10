@@ -80,7 +80,7 @@ classdef MStree < tree
     end
     
     function VarVol = get.VarVol(MST)
-      VarVol = zeros(1,Part.vn);
+      VarVol = zeros(1,Const.FerroConst.vn);
       idxs = MST.findleaves;
       for i = 1:numel(idxs)
         D = MST.get(idxs(i));
