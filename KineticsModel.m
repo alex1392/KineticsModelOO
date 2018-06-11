@@ -1,12 +1,11 @@
-function data = KineticsModel(sigma,immobility,A)
+function data = KineticsModel(sigma3,EVec3,immobility,A)
 %% KINETICSMODELOO  Simulate the hysteresis behavior of ferroelectric crystals, object-oriented version.
 %% Initialize Matlab Environment
 clear global; close all;
-files = dir;
 addpath(genpath([pwd,'\MSplotOO']))
 %% Set Constant
 const = Const.FerroConst;
-%immobility = 0.03;
+%immobility = 0.05; %Fitting0.002
 const.i_ini = immobility;
 const.A = A;
 %% Input
@@ -14,13 +13,13 @@ varR0 = []; varR1 = [];
 dofR0 = []; dofR1 = [];
 load('vardof')
 
-var = varR0;
-dof = dofR0;
+var = [5 3 4 6];
+dof = [0.5 0.5];
 % [var,dof] = randvar(16);
 type = repmat({'COA'},[1 length(var)]);
-EVec = [0;0;1];  % MV
-%sigma = [0;0;-1.07;0;0;0];
-fine = 1;
+EVec = [0;0;EVec3];  % MV
+sigma = [0;0;sigma3;0;0;0];
+fine = 2;
 restart = 0;
 zoom = 1;
 IFMLim = 0.5;
@@ -56,11 +55,11 @@ DirStr = num2str(DirecE);
 Lfrac = ScaleL / Const.FerroConst.PlotL;  %scale fraction
 %% Folder and Path
 if CN == 1
-  VarStr = num2str( obj.Var{1} );
+  VarStr = [num2str(obj.Var{1}),'MS'];
 elseif CN > 1
   VarStr = [ num2str(CN),'SC' ];
 end
-fName = [VarStr,'_',num2str(sigma(DirecE)),'sigma_',...
+fName = [VarStr,num2str(sigma(DirecE)),'sigma',...
         num2str(immobility),'immobility',...
         num2str(A(1)),'Anc',...
         num2str(A(2)),'Ac'];
