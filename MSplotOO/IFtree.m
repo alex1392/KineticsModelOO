@@ -142,6 +142,17 @@ classdef IFtree < tree
       end
     end
     
+    function nrBIF = getnearBIF(IFT, idx)
+      nrBIF = [];
+      IF = IFT.get(idx);
+      for i = 1:min(IFT.getsiblings(idx))
+        IFi = IFT.get(i);
+        if ~isempty(IFi) && IF.isnear(IFi) && IF ~= IFi
+          nrBIF = [nrBIF, IFi];
+        end
+      end
+    end
+    
     function h = draw(IFT, type, varargin)
       if nargin < 2
         type = 'normal';

@@ -13,7 +13,7 @@ varR0 = []; varR1 = [];
 dofR0 = []; dofR1 = [];
 load('vardof')
 
-var = [5 3 4 6];
+var = [1 3 2 5];
 dof = [0.5 0.5];
 % [var,dof] = randvar(16);
 type = repmat({'COA'},[1 length(var)]);
@@ -25,7 +25,6 @@ zoom = 1;
 IFMLim = 0.5;
 %% Options
 IFMethod = 'S'; % 'N', 'S'
-MSWeight = 1;
 opt = 'jpg/mat'; % jpg/mp4/gif/mat
 IFtype = 'compat'; %'normal', 'compat'
 %% Parameters
@@ -60,9 +59,9 @@ elseif CN > 1
   VarStr = [ num2str(CN),'SC' ];
 end
 fName = [VarStr,num2str(sigma(DirecE)),'sigma',...
-        num2str(immobility),'immobility',...
-        num2str(A(1)),'Anc',...
-        num2str(A(2)),'Ac'];
+  num2str(immobility),'immobility',...
+  num2str(A(1)),'Anc',...
+  num2str(A(2)),'Ac'];
 
 copyfile('*.m',fName);
 copyfile('*.mat',fName);
@@ -71,11 +70,7 @@ cd(fName);
 save([fName,'_',0,'.mat']);
 %% Simulation Starts
 if ~restart
-  if ~MSWeight
-    [obj, MST, IFT] = obj.getTree;
-  else
-    [obj, MST, IFT] = obj.getTree2;
-  end
+  [obj, MST, IFT] = obj.getTree2;
   axLim = [min(obj.p(:,1)),max(obj.p(:,1)),...
     min(obj.p(:,2)), max(obj.p(:,2)),...
     min(obj.p(:,3)), max(obj.p(:,3))];
@@ -95,16 +90,14 @@ while t < tf
   elseif abs(EF(DirecE)) < sEF
     tic
     IFM = judgeIF(MST,IFT,EF,stress);
+    dW = judgeWeight(MST,IFT,EF,stress);
     [MST,IFT] = IFmoveAll(MST,IFT,IFM);
-    if MSWeight
-      dW = judgeWeight(MST,IFT,EF,stress);
-      [MST,IFT] = moveWeight(MST,IFT,dW);
-    end
+    [MST,IFT] = moveWeight(MST,IFT,dW);
     if ~eqi(MST.Vol,V)
       warning('MST.Vol is not consistent');
       fprintf('deltaV = %f\n',MST.Vol - V)
     end
-    data = replot(data,MST,IFT,EF,stress); 
+    data = replot(data,MST,IFT,EF,stress);
   else
     t = t + dt;
     continue
@@ -131,94 +124,47 @@ end
     n = IFT.nnodes;
     d = Const.FerroConst.MTol/2;
     IFM = zeros(1,n);
-    if ~MSWeight
-      switch IFMethod
-        case 'N' %energy + draw
-          for i = 1: n
-            if isempty(IFT.get(i)) || IFT.depthtree.get(i) == 1 %SC domain can't move
-              continue
-            end
-            IF = IFT.get(i);
-            [MStempR,IFtempR] = IFmove(MST,IFT,i,d);
-            [MStempL,IFtempL] = IFmove(MST,IFT,i,-d);
-            GR = getG(MStempR.VarVol,EF,stress) + IFtempR.EN;
-            GL = getG(MStempL.VarVol,EF,stress) + IFtempL.EN;
-            g = (GR - GL) * MST.Vol * Lfrac^3 / (2*d);
-            IFM(i) = -g/(IF.I*IF.Area*Lfrac^2)*dt*Lfrac;
-            if abs(IFM(i)) > IFMLim
-              %             save(['IFMerr-',num2str(t),'.mat']);
-              IFM(i) = IFM(i)/abs(IFM(i))*IFMLim;
-            end
+    switch IFMethod
+      case 'N' %energy + draw
+        for i = 1: n
+          if isempty(IFT.get(i)) || IFT.depthtree.get(i) == 1 %SC domain can't move
+            continue
           end
-        case 'S' %Vfrac simplify
-          for i = 1:n
-            if isempty(IFT.get(i)) || IFT.depthtree.get(i) == 1 %SC domain can't move
-              continue
-            end
-            IF = IFT.get(i);
-            bIFs = IFT.getnear(i);
-            cMS = MST.get(1);
-            [RVarVol, LVarVol] = moveVF(MST,IF,d);
-            [RwallEN, LwallEN] = movewall(cMS, IFT, IF, bIFs, d);
-            GR = getG(RVarVol,EF,stress) + RwallEN;
-            GL = getG(LVarVol,EF,stress) + LwallEN;
-            g = (GR - GL)*MST.Vol*Lfrac^3 / (2*d);
-            IFM(i) = -g/(IF.I*IF.Area*Lfrac^2)*dt*Lfrac;
-            if abs(IFM(i)) > IFMLim
-              %             save(['IFMerr-',num2str(t),'.mat']);
-              IFM(i) = IFM(i)/abs(IFM(i))*IFMLim;
-            end
+          IF = IFT.get(i);
+          [MStempR,IFtempR] = IFmove(MST,IFT,i,d);
+          [MStempL,IFtempL] = IFmove(MST,IFT,i,-d);
+          GR = getG(MStempR.VarVol,EF,stress) + IFtempR.EN;
+          GL = getG(MStempL.VarVol,EF,stress) + IFtempL.EN;
+          g = (GR - GL) * MST.Vol * Lfrac^3 / (2*d);
+          IFM(i) = -g/(IF.I*IF.Area*Lfrac^2)*dt*Lfrac;
+          if abs(IFM(i)) > IFMLim
+            %             save(['IFMerr-',num2str(t),'.mat']);
+            IFM(i) = IFM(i)/abs(IFM(i))*IFMLim;
           end
-      end
-    else
-      switch IFMethod
-        case 'N' %energy + draw
-          for i = 1: n
-            if isempty(IFT.get(i)) || IFT.depthtree.get(i) == 1 %SC domain can't move
-              continue
-            end
-            IF = IFT.get(i);
-            [MStempR,IFtempR] = IFmove(MST,IFT,i,d);
-            [MStempL,IFtempL] = IFmove(MST,IFT,i,-d);
-            GR = getG(MStempR.VarVol,EF,stress) + IFtempR.EN;
-            GL = getG(MStempL.VarVol,EF,stress) + IFtempL.EN;
-            g = (GR - GL) * MST.Vol * Lfrac^3 / (2*d);
-            IFM(i) = -g/(IF.I*IF.Area*Lfrac^2)*dt*Lfrac;
-            if abs(IFM(i)) > IFMLim
-              %             save(['IFMerr-',num2str(t),'.mat']);
-              IFM(i) = IFM(i)/abs(IFM(i))*IFMLim;
-            end
+        end
+      case 'S'
+        for i = 1:n
+          if isempty(IFT.get(i)) || IFT.depthtree.get(i) == 1 %SC domain can't move
+            continue
           end
-        case 'S'
-          for i = 1:n
-            if isempty(IFT.get(i)) || IFT.depthtree.get(i) == 1 %SC domain can't move
-              continue
-            end
-            IF = IFT.get(i);
-            cID = IFT.getancestors(i);
-            cID = cID(end-1); %end = SC, end-1 = MS
-            cMS = MST.get(cID);
-            cIFT = IFT.subtree(cID,[],'match');
-            bIFs = cIFT.getnear(i-cID+1);
-            if cIFT.get(i-cID+1) ~= IF; warning('cIFT.getnear??'); end
-            [RVarVol, LVarVol] = moveVF(MST,IF,d);
-            [RwallEN, LwallEN] = movewall(cMS, IFT, IF, bIFs, d);
-            GR = getG(RVarVol,EF,stress) + RwallEN;
-            GL = getG(LVarVol,EF,stress) + LwallEN;
-            g = (GR - GL)*MST.Vol*Lfrac^3 / (2*d);
-            IFM(i) = -g/(IF.I*IF.Area*Lfrac^2)*dt*Lfrac;
-            if abs(IFM(i)) > IFMLim
-              %             save(['IFMerr-',num2str(t),'.mat']);
-              IFM(i) = IFM(i)/abs(IFM(i))*IFMLim;
-            end
-            if isnan(IFM(i))
-              IFM(i) = 0;
-            end
+          IF = IFT.get(i);
+          [RVarVol, LVarVol] = moveVF(MST,IF,d);
+          [RwallEN, LwallEN] = movewall(IFT, i, d);
+          GR = getG(RVarVol,EF,stress) + RwallEN;
+          GL = getG(LVarVol,EF,stress) + LwallEN;
+          g = (GR - GL)*MST.Vol*Lfrac^3 / (2*d);
+          IFM(i) = -g/(IF.I*IF.Area*Lfrac^2)*dt*Lfrac;
+          if abs(IFM(i)) > IFMLim
+            %             save(['IFMerr-',num2str(t),'.mat']);
+            IFM(i) = IFM(i)/abs(IFM(i))*IFMLim;
           end
-          if ~isreal(IFM)
-            IFM = real(IFM);
+          if isnan(IFM(i))
+            IFM(i) = 0;
           end
-      end
+        end
+        if ~isreal(IFM)
+          IFM = real(IFM);
+        end
     end
   end
 
@@ -243,7 +189,7 @@ end
     deltaV = zeros(CN);
     for i = 1:CN
       MSi = MST.subtree(cidx(i));
-      for j = i+1:CN 
+      for j = i+1:CN
         MSj = MST.subtree(cidx(j));
         
         wallA = (min([MSi.Vol, MSj.Vol]))^(2/3)*6; %2018/6/17
@@ -319,9 +265,7 @@ end
 
   function [MST,IFT] = ReCut(MST,IFT)
     idx = MST.BFS;
-    if MSWeight
-      idx(1) = [];
-    end
+    idx(1) = [];
     for i = idx
       if i > IFT.n
         return
@@ -451,7 +395,14 @@ end
     VarVol(IF.LVar) = VarVol(IF.LVar) + dV;
   end
 
-  function [RwallEN, LwallEN] = movewall(cMS, IFT, IF, bIFs, d)
+  function [RwallEN, LwallEN] = movewall(IFT, i, d)
+    cID = IFT.getancestors(i);
+    cID = cID(end-1); %end = SC, end-1 = MS
+    cMS = MST.get(cID);
+    cIFT = IFT.subtree(cID,[],'match');
+    bIFs = cIFT.getnear(i-cID+1);
+    if cIFT.get(i-cID+1) ~= IF; warning('cIFT.getnear??'); end
+    
     wallEN = IFT.EN;
     RwallEN = wallEN;
     LwallEN = wallEN;
@@ -473,13 +424,16 @@ end
         LwallEN = LwallEN - mIFdEN - bIFdEN;
       end
     end
+    
+    IFL = IF;
+    IFR = IF;
     nearBIF = [];
     for bif = cMS.BIF
       if IF.isnear(bif)
         nearBIF = [nearBIF,bif];
       end
     end
-    moveP
+    nearBIF = [nearBIF, IFT.getnearBIF(IF)];
     for pID = 1:size(IF.p,1)
       PnearBIF = [];
       for nBif = nearBIF
@@ -493,36 +447,42 @@ end
           PnearSL = [PnearSL,PnearBIF(fi).FxF(PnearBIF(fj))];
         end
       end
+      moveR = [];
       moveL = [];
       for sL = PnearSL
         sLp = setdiffi(sL.p, IF.p(pID,:));
-        if IF.ison(sLp)
-          moveL = sL.vec;
-          break
+        for sLpID = 1:size(sLp,1)
+          if IF.isin(sLp(sLpID,:))
+            continue
+          elseif IF.ison(sLp(sLpID,:))
+            moveR = sLp(sLpID,:) - IF.p(pID,:);
+          else
+            moveL = sLp(sLpID,:) - IF.p(pID,:);
+          end
         end
       end
-      
+      if isempty(moveR) || isempty(moveL)
+        warning('moveIF error!');
+        break
+      end
+      IFL.p(pID,:) = IF.p(pID,:) + moveL / norm(moveL) * d;
+      IFR.p(pID,:) = IF.p(pID,:) + moveR / norm(moveR) * d;
     end
+    RwallEN = RwallEN - IF.EN + IFR.EN;
+    LwallEN = LwallEN - IF.EN + IFL.EN;
   end
 %% plot
   function data = replot(data, MST, IFT, EF, stress)
-    if ~MSWeight
-      delete(data.SC1);
-      data.SC1 = MST.draw('Parent', ax.SC1);
-      delete(data.IF1);
-      data.IF1 = IFT.draw(IFtype, 'Parent', ax.IF1);
-    else
-      cidx = MST.getchildren(1);
-      for i = 1:CN
-        SCfield = ['SC',num2str(i)];
-        IFfield = ['IF',num2str(i)];
-        delete(data.(SCfield));
-        delete(data.(IFfield));
-        data.(SCfield) = MST.subtree(cidx(i)).draw('Parent',ax.(SCfield));
-        axis(ax.(SCfield),axLim)
-        data.(IFfield) = IFT.subtree(cidx(i)).draw(IFtype,'Parent',ax.(IFfield));
-        axis(ax.(IFfield),axLim)
-      end
+    cidx = MST.getchildren(1);
+    for i = 1:CN
+      SCfield = ['SC',num2str(i)];
+      IFfield = ['IF',num2str(i)];
+      delete(data.(SCfield));
+      delete(data.(IFfield));
+      data.(SCfield) = MST.subtree(cidx(i)).draw('Parent',ax.(SCfield));
+      axis(ax.(SCfield),axLim)
+      data.(IFfield) = IFT.subtree(cidx(i)).draw(IFtype,'Parent',ax.(IFfield));
+      axis(ax.(IFfield),axLim)
     end
     
     E = EF(DirecE) / LoadDeg;
@@ -579,38 +539,24 @@ end
     xlabel(ax.V,'$time$','interpreter','latex','fontsize',FSize);
     ylabel(ax.V,'$Volume Fraction$','interpreter','latex','fontsize',FSize);
     %% SC,IF
-    if ~MSWeight
-      fSC = figure('Name','SCplot','NumberTitle','off');
-      ax.SC1 = axes('parent', fSC, 'units','normalized',...
-        'XLim',axLim(1:2),'YLim',axLim(3:4),'ZLim',axLim(5:6),...
-        'xtick',[],'ytick',[],'ztick',[]);
-      data.SC1 = MST.draw('Parent', ax.SC1);
-      
-      fIF = figure('Name', 'IFplot', 'numbertitle', 'off');
-      ax.IF1 = axes('parent', fIF, 'units','normalized',...
-        'XLim',axLim(1:2),'YLim',axLim(3:4),'ZLim',axLim(5:6),...
-        'visible','off');
-      data.IF1 = IFT.draw(IFtype, 'Parent', ax.IF1);
-    else
-      cidx = MST.getchildren(1);
-      fSC = figure('Name','SCplot','NumberTitle','off');
-      for i = 1:CN
-        SCfield = ['SC',num2str(i)];
-        ax.(SCfield) = subplot(n,n,i,'parent',fSC,'units','normalized','visible','off');
-        data.(SCfield) = MST.subtree(cidx(i)).draw('Parent',ax.(SCfield));
-        axis(ax.(SCfield),axLim)
-        camzoom(ax.(SCfield),zoom)
-      end
-      
-      cidx = IFT.getchildren(1);
-      fIF = figure('Name', 'IFplot', 'numbertitle', 'off');
-      for i = 1:CN
-        IFfield = ['IF',num2str(i)];
-        ax.(IFfield) = subplot(n,n,i,'parent',fIF,'units','normalized','visible','off');
-        data.(IFfield) = IFT.subtree(cidx(i)).draw(IFtype,'Parent', ax.(IFfield));
-        axis(ax.(IFfield),axLim)
-        camzoom(ax.(IFfield),zoom)
-      end
+    cidx = MST.getchildren(1);
+    fSC = figure('Name','SCplot','NumberTitle','off');
+    for i = 1:CN
+      SCfield = ['SC',num2str(i)];
+      ax.(SCfield) = subplot(n,n,i,'parent',fSC,'units','normalized','visible','off');
+      data.(SCfield) = MST.subtree(cidx(i)).draw('Parent',ax.(SCfield));
+      axis(ax.(SCfield),axLim)
+      camzoom(ax.(SCfield),zoom)
+    end
+    
+    cidx = IFT.getchildren(1);
+    fIF = figure('Name', 'IFplot', 'numbertitle', 'off');
+    for i = 1:CN
+      IFfield = ['IF',num2str(i)];
+      ax.(IFfield) = subplot(n,n,i,'parent',fIF,'units','normalized','visible','off');
+      data.(IFfield) = IFT.subtree(cidx(i)).draw(IFtype,'Parent', ax.(IFfield));
+      axis(ax.(IFfield),axLim)
+      camzoom(ax.(IFfield),zoom)
     end
     %% timers
     hT = uicontrol(fSC,'style','text','String','Time Passed: 00:00:00',...
