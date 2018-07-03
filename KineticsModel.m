@@ -236,16 +236,16 @@ end
     d = Const.FerroConst.MTol/10; %10/8
     cidx = MST.getchildren(1);
     Weight = [MST.get(cidx).Vol];
-    wallI = Const.FerroConst.i_ini*Const.FerroConst.i_ang(3); %10/8
+    wallI = Const.FerroConst.i_ini*Const.FerroConst.i_ang(3); %2018/6/17
     VF = MST.VarVol;
     deltaV = zeros(CN);
     for i = 1:CN
       MSi = MST.subtree(cidx(i));
-      for j = i+1:CN %2018/6/10
+      for j = i+1:CN 
         MSj = MST.subtree(cidx(j));
         
-        wallA = (MSi.Vol + MSj.Vol)^(2/3)*6; %2018/6/10
-        dV = d*10; %2018/6/11
+        wallA = (min([MSi.Vol, MSj.Vol]))^(2/3)*6; %2018/6/17
+        dV = d*wallA; %2018/6/17
         
         VFi = MSi.VarVol;
         VFj = MSj.VarVol;

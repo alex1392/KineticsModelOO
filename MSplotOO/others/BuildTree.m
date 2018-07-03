@@ -18,6 +18,7 @@ end
 [STree,Badness,numAnswer] = Construct(FavoredP);  %Construct the upper node of the tree
 if iscell( STree )% Generalize the Tree
   STree = STree{randi(length(STree))};
+  %STree = STree{end-3}; %for [1 2 3 4 1 2 3 4]
   %STree = STree{3}; %for [1 2 3 4]
 end
   
