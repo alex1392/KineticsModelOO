@@ -13,8 +13,8 @@ varR0 = []; varR1 = [];
 dofR0 = []; dofR1 = [];
 load('vardof')
 
-var = [5 3];
-dof = [0.5];
+var = [5 3 4 6];
+dof = [0.5 0.5];
 % [var,dof] = randvar(16);
 type = repmat({'COA'},[1 length(var)]);
 EVec = [0;0;EVec3];  % MV
@@ -473,51 +473,36 @@ end
         LwallEN = LwallEN - mIFdEN - bIFdEN;
       end
     end
-    
-%     IFL = IF;
-%     IFR = IF;
-%     nearBIF = [];
-%     for bif = cMS.BIF
-%       if IF.isnear(bif)
-%         nearBIF = [nearBIF,bif];
-%       end
-%     end
-%     for pID = 1:size(IF.p,1)
-%       PnearBIF = [];
-%       for nBif = nearBIF
-%         if nBif.isin(IF.p(pID,:))
-%           PnearBIF = [PnearBIF, nBif];
-%         end
-%       end
-%       PnearSL = [];
-%       for fi = 1:numel(PnearBIF)
-%         for fj = fi+1:numel(PnearBIF)
-%           PnearSL = [PnearSL,PnearBIF(fi).FxF(PnearBIF(fj))];
-%         end
-%       end
-%       moveR = [];
-%       moveL = [];
-%       for sL = PnearSL
-%         sLp = setdiffi(sL.p, IF.p(pID,:));
-%         for sLpID = 1:size(sLp,1)
-%           if IF.isin(sLp(sLpID,:))
-%             continue
-%           elseif IF.ison(sLp(sLpID,:))
-%             moveR = sLp(sLpID,:) - IF.p(pID,:);
-%           else
-%             moveL = sLp(sLpID,:) - IF.p(pID,:);
-%           end
-%         end
-%       end
-%       if isempty(moveR) || isempty(moveL)
-%         warning('moveIF error!');
-%         break
-%       end
-%       IFL.p(pID,:) = IF.p(pID,:) + moveL / norm(moveL) * d;
-%       IFR.p(pID,:) = IF.p(pID,:) + moveR / norm(moveR) * d;
-%     end
-%     RwallEN = RwallEN - IF.EN + IFR.EN;
-%     LwallEN = LwallEN - IF.EN + IFL.EN;
+    nearBIF = [];
+    for bif = cMS.BIF
+      if IF.isnear(bif)
+        nearBIF = [nearBIF,bif];
+      end
+    end
+    moveP
+    for pID = 1:size(IF.p,1)
+      PnearBIF = [];
+      for nBif = nearBIF
+        if nBif.isin(IF.p(pID,:))
+          PnearBIF = [PnearBIF, nBif];
+        end
+      end
+      PnearSL = [];
+      for fi = 1:numel(PnearBIF)
+        for fj = fi+1:numel(PnearBIF)
+          PnearSL = [PnearSL,PnearBIF(fi).FxF(PnearBIF(fj))];
+        end
+      end
+      moveL = [];
+      for sL = PnearSL
+        sLp = setdiffi(sL.p, IF.p(pID,:));
+        if IF.ison(sLp)
+          moveL = sL.vec;
+          break
+        end
+      end
+      
+    end
   end
 %% plot
   function data = replot(data, MST, IFT, EF, stress)
