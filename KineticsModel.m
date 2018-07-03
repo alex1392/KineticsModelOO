@@ -13,8 +13,8 @@ varR0 = []; varR1 = [];
 dofR0 = []; dofR1 = [];
 load('vardof')
 
-var = [1 3 2 5];
-dof = [0.5 0.5];
+var = varR1;
+dof = dofR1;
 % [var,dof] = randvar(16);
 type = repmat({'COA'},[1 length(var)]);
 EVec = [0;0;EVec3];  % MV
@@ -434,7 +434,7 @@ end
         nearBIF = [nearBIF,bif];
       end
     end
-    nearBIF = [nearBIF, IFT.getnearBIF(idx)];
+    nearBIF = [nearBIF, cIFT.getnearBIF(idx-cID+1)];
     for pID = 1:size(IF.p,1)
       PnearBIF = [];
       for nBif = nearBIF

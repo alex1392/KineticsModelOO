@@ -13,8 +13,8 @@ varR0 = []; varR1 = [];
 dofR0 = []; dofR1 = [];
 load('vardof')
 
-var = [1 3 2 5];
-dof = [0.5 0.5];
+var = varR1;
+dof = dofR1;
 % [var,dof] = randvar(16);
 type = repmat({'COA'},[1 length(var)]);
 EVec = [0;0;EVec3];  % MV
@@ -149,7 +149,7 @@ end
           end
           IF = IFT.get(i);
           [RVarVol, LVarVol] = moveVF(MST,IF,d);
-          [RwallEN, LwallEN] = movewall(IFT, i, d);
+          [RwallEN, LwallEN] = movewall(MST, IFT, i, d);
           GR = getG(RVarVol,EF,stress) + RwallEN;
           GL = getG(LVarVol,EF,stress) + LwallEN;
           g = (GR - GL)*MST.Vol*Lfrac^3 / (2*d);
@@ -395,13 +395,14 @@ end
     VarVol(IF.LVar) = VarVol(IF.LVar) + dV;
   end
 
-  function [RwallEN, LwallEN] = movewall(IFT, i, d)
-    cID = IFT.getancestors(i);
+  function [RwallEN, LwallEN] = movewall(MST, IFT, idx, d)
+    IF = IFT.get(idx);
+    cID = IFT.getancestors(idx);
     cID = cID(end-1); %end = SC, end-1 = MS
     cMS = MST.get(cID);
     cIFT = IFT.subtree(cID,[],'match');
-    bIFs = cIFT.getnear(i-cID+1);
-    if cIFT.get(i-cID+1) ~= IF; warning('cIFT.getnear??'); end
+    bIFs = cIFT.getnear(idx-cID+1);
+    if cIFT.get(idx-cID+1) ~= IF; warning('cIFT.getnear??'); end
     
     wallEN = IFT.EN;
     RwallEN = wallEN;
@@ -425,15 +426,15 @@ end
       end
     end
     
-    IFL = IF;
-    IFR = IF;
+    IFLp = IF.p;
+    IFRp = IF.p;
     nearBIF = [];
     for bif = cMS.BIF
       if IF.isnear(bif)
         nearBIF = [nearBIF,bif];
       end
     end
-    nearBIF = [nearBIF, IFT.getnearBIF(IF)];
+    nearBIF = [nearBIF, cIFT.getnearBIF(idx)];
     for pID = 1:size(IF.p,1)
       PnearBIF = [];
       for nBif = nearBIF
@@ -465,11 +466,17 @@ end
         warning('moveIF error!');
         break
       end
-      IFL.p(pID,:) = IF.p(pID,:) + moveL / norm(moveL) * d;
-      IFR.p(pID,:) = IF.p(pID,:) + moveR / norm(moveR) * d;
+      IFLp(pID,:) = IF.p(pID,:) + moveL / norm(moveL) * d;
+      IFRp(pID,:) = IF.p(pID,:) + moveR / norm(moveR) * d;
     end
-    RwallEN = RwallEN - IF.EN + IFR.EN;
-    LwallEN = LwallEN - IF.EN + IFL.EN;
+    IFR = IF;
+    IFL = IF;
+    IFR.p = IFRp;
+    IFL.p = IFLp;
+    IFREN = IF.EN / IF.Area * IFR.Area;
+    IFLEN = IF.EN / IF.Area * IFL.Area;
+    RwallEN = RwallEN - IF.EN + IFREN;
+    LwallEN = LwallEN - IF.EN + IFLEN;
   end
 %% plot
   function data = replot(data, MST, IFT, EF, stress)
